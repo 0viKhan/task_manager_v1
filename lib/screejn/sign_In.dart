@@ -171,7 +171,7 @@ class _SignInState extends State<SignIn> {
         // Parse user
         final user = UserModel.fromJson(data['data']);
         await AuthController.saveUserData(user, token);
-        if (!mounted) return;
+        if (mounted) return;
         Navigator.pushNamedAndRemoveUntil(
             context, MainNavScreen.name, (predicate) => false);
       } catch (e) {
