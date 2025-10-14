@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/data/models/task_models.dart';
+import 'package:task_manager/data/service/Network_caller.dart';
+import 'package:task_manager/design/widgets/snack_bar_message.dart';
 import 'package:task_manager/screejn/add_new_task.dart';
+import 'package:task_manager/utills/Urls.dart';
 
 class NewTaskListScreen extends StatefulWidget {
   const NewTaskListScreen({super.key});
@@ -9,6 +14,15 @@ class NewTaskListScreen extends StatefulWidget {
 }
 
 class _NewTaskListScreenState extends State<NewTaskListScreen> {
+  bool _getNewTaskInProgress = false;
+  List<TaskModel> newTaskList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getNewTaskList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +31,6 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-
             SizedBox(
               height: 200,
               child: ListView.separated(
@@ -31,16 +44,17 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
                     taskType: types[index],
                   );
                 },
-                separatorBuilder: (context, index) =>
-                const SizedBox(width: 10),
+                separatorBuilder: (context, index) => const SizedBox(width: 10),
               ),
             ),
             const SizedBox(height: 16),
-
             Expanded(
-              child: ListView.builder(
-                itemCount: 10,
+              child: _getNewTaskInProgress
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                itemCount: newTaskList.length,
                 itemBuilder: (context, index) {
+                  final task = newTaskList[index];
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     child: Padding(
@@ -59,7 +73,7 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
                                   ),
                                   const SizedBox(width: 10),
                                   Text(
-                                    "Task $index",
+                                    task.title ?? "Untitled Task",
                                     style: const TextStyle(
                                       color: Colors.black,
                                       fontSize: 20,
@@ -68,14 +82,14 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              const Text("Task details Here"),
+                              Text(task.description ?? "No details"),
                               const SizedBox(height: 4),
-                              const Text("time: 20:30pm"),
+                              Text("Time: ${task.createdDate ?? "N/A"}"),
                               const SizedBox(height: 4),
                               Chip(
-                                label: const Text(
-                                  "New",
-                                  style: TextStyle(
+                                label: Text(
+                                  task.status ?? "New",
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                   ),
@@ -112,14 +126,39 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: _onTapAddNewTaskButton,
-      child: Icon(Icons.add),
-
+      floatingActionButton: FloatingActionButton(
+        onPressed: _onTapAddNewTaskButton,
+        child: const Icon(Icons.add),
       ),
     );
   }
-  void _onTapAddNewTaskButton(){
-    Navigator.pushNamed(context, AddNewTask.name);
+
+  void _onTapAddNewTaskButton() async {
+    await Navigator.pushNamed(context, AddNewTask.name);
+    _getNewTaskList(); // refresh after returning
+  }
+
+  Future<void> _getNewTaskList() async {
+    _getNewTaskInProgress = true;
+    setState(() {});
+
+    NetworkResponse response =
+    await NetworkCaller.getRequest(url: Urls.getNewTaskUrl);
+
+    _getNewTaskInProgress = false;
+
+    if (response.isSuccess) {
+      List<TaskModel> list = [];
+      for (Map<String, dynamic> jsonData in response.body!['data']) {
+        list.add(TaskModel.fromJson(jsonData));
+      }
+      newTaskList = list;
+    } else {
+      showSnackbarMessage(
+          context, response.errorMessage ?? "Failed to load tasks");
+    }
+
+    setState(() {});
   }
 }
 
@@ -136,16 +175,17 @@ class TaskCountSummary extends StatelessWidget {
   final String taskType;
 
   Color _getTaskChipColour() {
-    if (taskType.toLowerCase() == 'new') {
-      return Colors.blue;
-    } else if (taskType.toLowerCase() == 'progress') {
-      return Colors.orange;
-    } else if (taskType.toLowerCase() == 'completed') {
-      return Colors.green;
-    } else if (taskType.toLowerCase() == 'cancelled') {
-      return Colors.red;
-    } else {
-      return Colors.grey;
+    switch (taskType.toLowerCase()) {
+      case 'new':
+        return Colors.blue;
+      case 'progress':
+        return Colors.orange;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -173,10 +213,10 @@ class TaskCountSummary extends StatelessWidget {
             ),
           ],
         ),
-
       ),
-
     );
   }
-
 }
+
+
+

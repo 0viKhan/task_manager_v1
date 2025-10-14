@@ -142,47 +142,58 @@ class _SignInState extends State<SignIn> {
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _signInProgress = true);
 
-    Map<String, String> requestBody = {
-      "email": _emailController.text.trim(),
-      "password": _passRController.text,
-    };
+    try {
+      // Prepare login request
+      Map<String, String> requestBody = {
+        "email": _emailController.text.trim(),
+        "password": _passRController.text,
+      };
 
-    final response =
-    await NetworkCaller.postRequest(url: Urls.loginUrl, body: requestBody,isFromLogin: true);
+      // Call API
+      final response = await NetworkCaller.postRequest(
+        url: Urls.loginUrl,
+        body: requestBody,
+        isFromLogin: true,
+      );
 
-    setState(() => _signInProgress = false);
+      setState(() => _signInProgress = false);
 
-    if (response.isSuccess && response.body != null) {
-      try {
+      if (response.isSuccess && response.body != null) {
         final data = response.body!;
-        // Check if 'data' exists and is not null
-        if (data['data'] == null) {
-          showSnackbarMessage(context, data['message'] ?? 'Login failed.');
-          return;
-        }
-        // Check token
-        final token = data['token'] ?? data['accessToken'];
+
+        // Extract token
+        final token = data['token'];
         if (token == null) {
           showSnackbarMessage(context, 'Token not found.');
           return;
         }
-        // Parse user
-        final user = UserModel.fromJson(data['data']);
+
+        // Parse user data
+        final userJson = data['data'];
+        if (userJson == null) {
+          showSnackbarMessage(context, 'User data not found.');
+          return;
+        }
+
+        final user = UserModel.fromJson(userJson);
         await AuthController.saveUserData(user, token);
-        if (mounted) return;
+
+        // Navigate to main screen
         Navigator.pushNamedAndRemoveUntil(
-            context, MainNavScreen.name, (predicate) => false);
-      } catch (e) {
-        showSnackbarMessage(context, 'Error parsing response.');
+          context,
+          MainNavScreen.name,
+              (predicate) => false,
+        );
+      } else {
+        final error = response.body?['message'] ??
+            response.errorMessage ??
+            'Login failed. Please check your credentials.';
+        showSnackbarMessage(context, error);
       }
-    } else {
-      // Fallback error handling
-      final error = response.body?['message'] ??
-          response.errorMessage ??
-          'Login failed. Please check your credentials.';
-      showSnackbarMessage(context, error);
-    }
-  }
-}
+    } catch (e) {
+      setState(() => _signInProgress = false);
+      showSnackbarMessage(context, 'Something went wrong: $e');
+    }}}
