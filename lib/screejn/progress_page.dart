@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../data/models/task_models.dart';
+import '../data/service/Network_caller.dart';
+import '../design/widgets/TaskCard.dart';
+import '../design/widgets/snack_bar_message.dart';
+import '../utills/Urls.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -8,73 +13,58 @@ class ProgressPage extends StatefulWidget {
 }
 
 class _ProgressPageState extends State<ProgressPage> {
+  bool _getProgressTaskInProgress = false;
+  List<TaskModel> _progressnewTaskList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _getProgressTaskList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: 10,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: _getProgressTaskInProgress
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+        itemCount: _progressnewTaskList.length,
         itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Stack(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.task,
-                            size: 30,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          Text(
-                            "Task $index",
-                            style: TextStyle(fontSize: 20, color: Colors.green),
-                          )
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      const Text("Task details Here"),
-                      const SizedBox(height: 4),
-                      const Text("time: 20:30pm"),
-                      const SizedBox(height: 4),
-                      Chip(label: const Text("New",
-                      style: TextStyle(
+          final task = _progressnewTaskList[index];
 
-                      ),
-
-                      ),
-                        backgroundColor: Colors.green,
-
-                      ),
-
-                    ],
-                    
-                  ),
-                  Positioned(
-                      right: 0,
-                      top: 0,
-
-                      child: Row(
-                        children: [
-                          IconButton(icon:const Icon(Icons.wallet_giftcard),onPressed: (){}, ),
-                          IconButton(icon:const Icon(Icons.delete),onPressed: (){}, )
-                        ],
-
-                      ))
-
-                ],
-
-              ),
-
-            ),
+          return TaskCard(
+            taskType: TaskType.progress,
+            // Pass task details if TaskCard supports it
+            // title: task.title,
+            // description: task.description,
           );
+        },
+      ),
+    );
+  }
 
-        });
+  Future<void> _getProgressTaskList() async {
+    setState(() {
+      _getProgressTaskInProgress = true;
+    });
+
+    NetworkResponse response =
+    await NetworkCaller.getRequest(url: Urls.getProgressTaskUrl);
+
+    if (response.isSuccess) {
+      List<TaskModel> list = [];
+      for (Map<String, dynamic> jsonData in response.body!['data']) {
+        list.add(TaskModel.fromJson(jsonData));
+      }
+      _progressnewTaskList = list;
+    } else {
+      showSnackbarMessage(
+          context, response.errorMessage ?? "Failed to load tasks");
+    }
+
+    setState(() {
+      _getProgressTaskInProgress = false;
+    });
   }
 }

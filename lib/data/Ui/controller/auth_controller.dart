@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_models.dart';
 
-
 class AuthController {
   static UserModel? userModel;
   static String? accessToken;
+
 
   static Future<void> saveUserData(UserModel model, String token) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -15,10 +15,11 @@ class AuthController {
     accessToken = token;
   }
 
+
   static Future<bool> isUserLoggedIn() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     String? token = sharedPreferences.getString('token');
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       accessToken = token;
       String? userData = sharedPreferences.getString('user-data');
       if (userData != null) {
@@ -28,15 +29,11 @@ class AuthController {
     }
     return false;
   }
-  static Future<void>clearData()async
-  {
-    SharedPreferences sharedPreferences =await SharedPreferences.getInstance()
-;
 
-  await sharedPreferences.clear();
-  accessToken=null;
-  userModel=null;
-
+  static Future<void> clearData() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    await sharedPreferences.clear();
+    accessToken = null;
+    userModel = null;
   }
 }
-
