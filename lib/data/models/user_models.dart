@@ -15,10 +15,10 @@ class UserModel {
     required this.photo,
   });
 
-  // ✅ Add fullName getter
+
   String get fullName => '$firstName $lastName'.trim();
 
-  // ✅ Factory constructor to parse JSON data safely
+
   factory UserModel.fromJson(Map<String, dynamic> jsonData) {
     return UserModel(
       id: jsonData['_id'] ?? '',
@@ -30,7 +30,7 @@ class UserModel {
     );
   }
 
-  // ✅ Convert to JSON map (for saving to local storage or API)
+
   Map<String, dynamic> toJson() {
     return {
       '_id': id,
@@ -42,7 +42,7 @@ class UserModel {
     };
   }
 
-  // ✅ Add copyWith() for easy updates
+
   UserModel copyWith({
     String? id,
     String? email,

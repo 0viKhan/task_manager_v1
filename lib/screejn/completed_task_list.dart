@@ -1,27 +1,69 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:task_manager/data/models/task_models.dart';
+import 'package:task_manager/data/service/Network_caller.dart';
+import 'package:task_manager/design/widgets/TaskCard.dart';
+import 'package:task_manager/design/widgets/snack_bar_message.dart';
+import 'package:task_manager/utills/Urls.dart';
 
-class CompletedPage extends StatelessWidget {
-  const CompletedPage({super.key});
+class CompletedTaskListScreen extends StatefulWidget {
+  const CompletedTaskListScreen({super.key});
 
   @override
+  State<CompletedTaskListScreen> createState() =>
+      _CompletedTaskListScreenState();
+}
+
+class _CompletedTaskListScreenState extends State<CompletedTaskListScreen> {
+  bool _getCompletedTaskListInProgress = false;
+  List<TaskModel> _CompletedTaskList = [];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _getCompletedTaskList();
+    });
+  }
+
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: 5, // example data
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ListTile(
-            leading: const Icon(Icons.done, color: Colors.green),
-            title: Text("Completed Task $index"),
-            subtitle: const Text("This task has been successfully finished."),
-            trailing: const Chip(
-              label: Text("Completed"),
-              backgroundColor: Colors.greenAccent,
-            ),
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Visibility(
+        visible: _getCompletedTaskListInProgress==false,
+        replacement: CircularProgressIndicator(),
+        child: ListView.builder(
+          itemCount: _CompletedTaskList.length,
+          itemBuilder: (context, index) {
+            return TaskCard(
+              taskType: TaskType.completed,
+              taskModel: _CompletedTaskList[index],
+              onStatusUpdate: () {
+                _getCompletedTaskList();
+              },
+            );
+          },
+        ),
+      ),
+
     );
+  }
+
+  Future<void> _getCompletedTaskList() async {
+    _getCompletedTaskListInProgress = true;
+    setState(() {});
+
+    NetworkResponse response =
+        await NetworkCaller.getRequest(url: Urls.getCompletedTaskUrl);
+    if (response.isSuccess) {
+      List<TaskModel> list = [];
+      for (Map<String, dynamic> jsonData in response.body!['data']) {
+        list.add(TaskModel.fromJson(jsonData));
+      }
+      _CompletedTaskList = list;
+    } else {
+      showSnackBarMessage(context, response.errorMessage!);
+    }
+    _getCompletedTaskListInProgress = false;
+    setState(() {});
   }
 }

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../data/models/task_models.dart';
 import '../data/models/task_status_count.dart';
-
-import '../data/service/Network_caller.dart';
+import '../data/service/network_caller.dart';
 import '../design/widgets/TaskCard.dart';
+
+import '../design/widgets/task_count_summary.dart';
+
 import '../design/widgets/centered_circular_progress_indicator.dart';
 import '../design/widgets/snack_bar_message.dart';
-import '../design/widgets/task_count_summary.dart';
-import '../utills/Urls.dart';
+import '../utills/urls.dart';
 import 'add_new_task.dart';
-
 
 class NewTaskListScreen extends StatefulWidget {
   const NewTaskListScreen({super.key});
@@ -50,7 +50,7 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _taskStatusCountList.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 4),
+                  separatorBuilder: (_, __) => const SizedBox(width: 4),
                   itemBuilder: (context, index) {
                     final item = _taskStatusCountList[index];
                     return TaskCountSummaryCard(
@@ -70,8 +70,6 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
                   itemBuilder: (context, index) {
                     return TaskCard(
                       taskType: TaskType.tNew,
-
-
                       taskModel: _newTaskList[index],
                       onStatusUpdate: () {
                         _getNewTaskList();

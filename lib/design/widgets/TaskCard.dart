@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-
-import 'package:task_manager/data/service/network_caller.dart';
-
-import 'package:task_manager/design/widgets/snack_bar_message.dart';
-
 import '../../data/models/task_models.dart';
-import '../../utills/Urls.dart';
+import '../../data/service/network_caller.dart';
+import '../../utills/urls.dart';
 import 'centered_circular_progress_indicator.dart';
+import 'snack_bar_message.dart';
 
 enum TaskType { tNew, progress, completed, cancelled }
 
@@ -39,40 +36,27 @@ class _TaskCardState extends State<TaskCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.taskModel.title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              widget.taskModel.description,
-              style: TextStyle(color: Colors.black54),
-            ),
+            Text(widget.taskModel.title, style: Theme.of(context).textTheme.titleMedium),
+            Text(widget.taskModel.description, style: const TextStyle(color: Colors.black54)),
             Text('Date: ${widget.taskModel.createdDate}'),
             const SizedBox(height: 8),
             Row(
               children: [
                 Chip(
-                  label: Text(
-                    _getTaskTypeName(),
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  label: Text(_getTaskTypeName(), style: const TextStyle(color: Colors.white)),
                   backgroundColor: _getTaskChipColor(),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
-                    side: BorderSide.none,
                   ),
                 ),
-                Spacer(),
-                IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
-                  Visibility(
-                  visible: _updateTaskStatusInProgress == false,
-                  replacement: CenteredCircularProgressIndicator(),
+                const Spacer(),
+                IconButton(onPressed: _deleteTask, icon: const Icon(Icons.delete)),
+                Visibility(
+                  visible: !_updateTaskStatusInProgress,
+                  replacement: const CenteredCircularProgressIndicator(),
                   child: IconButton(
-                    onPressed: () {
-                      _showEditTaskStatusDialog();
-                    },
-                    icon: Icon(Icons.edit),
+                    onPressed: _showEditTaskStatusDialog,
+                    icon: const Icon(Icons.edit),
                   ),
                 ),
               ],
@@ -114,50 +98,14 @@ class _TaskCardState extends State<TaskCard> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: Text('Change Status'),
+          title: const Text('Change Status'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                title: Text('New'),
-                trailing: _getTaskStatusTrailing(TaskType.tNew),
-                onTap: () {
-                  if (widget.taskType == TaskType.tNew) {
-                    return;
-                  }
-                  _updateTaskStatus('New');
-                },
-              ),
-              ListTile(
-                title: Text('In Progress'),
-                trailing: _getTaskStatusTrailing(TaskType.progress),
-                onTap: () {
-                  if (widget.taskType == TaskType.progress) {
-                    return;
-                  }
-                  _updateTaskStatus('Progress');
-                },
-              ),
-              ListTile(
-                title: Text('Completed'),
-                trailing: _getTaskStatusTrailing(TaskType.completed),
-                onTap: () {
-                  if (widget.taskType == TaskType.completed) {
-                    return;
-                  }
-                  _updateTaskStatus('Completed');
-                },
-              ),
-              ListTile(
-                title: Text('Cancelled'),
-                trailing: _getTaskStatusTrailing(TaskType.cancelled),
-                onTap: () {
-                  if (widget.taskType == TaskType.cancelled) {
-                    return;
-                  }
-                  _updateTaskStatus('Cancelled');
-                },
-              ),
+              _statusOption('New', TaskType.tNew),
+              _statusOption('In Progress', TaskType.progress),
+              _statusOption('Completed', TaskType.completed),
+              _statusOption('Cancelled', TaskType.cancelled),
             ],
           ),
         );
@@ -165,40 +113,36 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  Widget? _getTaskStatusTrailing(TaskType type) {
-    return widget.taskType == type ? Icon(Icons.check) : null;
+  ListTile _statusOption(String title, TaskType type) {
+    return ListTile(
+      title: Text(title),
+      trailing: widget.taskType == type ? const Icon(Icons.check) : null,
+      onTap: () {
+        if (widget.taskType != type) {
+          _updateTaskStatus(title);
+        }
+      },
+    );
   }
-
-  // TODO: Complete this
-  // void _onTapTaskStatus(TaskType type) {
-  //   if (type == widget.taskType) {
-  //     return;
-  //   }
-  //
-  // }
 
   Future<void> _updateTaskStatus(String status) async {
     Navigator.pop(context);
-    _updateTaskStatusInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() => _updateTaskStatusInProgress = true);
 
-    NetworkResponse response = await NetworkCaller.getRequest(
+    final response = await NetworkCaller.getRequest(
       url: Urls.updateTaskStatusUrl(widget.taskModel.id, status),
     );
 
-    _updateTaskStatusInProgress = false;
-    if (mounted) {
-      setState(() {});
-    }
+    setState(() => _updateTaskStatusInProgress = false);
 
     if (response.isSuccess) {
       widget.onStatusUpdate();
     } else {
-      if (mounted) {
-        showSnackBarMessage(context, response.errorMessage!);
-      }
+      if (mounted) showSnackBarMessage(context, response.errorMessage ?? 'Update failed');
     }
+  }
+
+  Future<void> _deleteTask() async {
+    // You can implement your delete API here later
   }
 }
