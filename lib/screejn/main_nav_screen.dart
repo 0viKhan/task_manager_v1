@@ -19,7 +19,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
   final List<Widget> _screens = [
     const NewTaskListScreen(),
-    const ProgressPage(),
+    const ProgressTaskListScreen(),
     const CompletedPage(),
     const Cancelled_task_list_page(),
   ];

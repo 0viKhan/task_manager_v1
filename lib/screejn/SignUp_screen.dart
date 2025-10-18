@@ -199,9 +199,9 @@ class _SignUpState extends State<SignUp> {
 
     if (response.isSuccess) {
       _clearTextField();
-      showSnackbarMessage(context, 'Registration successful! Please login.');
+      showSnackBarMessage(context, 'Registration successful! Please login.');
     } else {
-      showSnackbarMessage(
+      showSnackBarMessage(
         context,
         response.errorMessage ?? 'Something went wrong',
       );

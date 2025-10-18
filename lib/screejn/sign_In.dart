@@ -167,14 +167,14 @@ class _SignInState extends State<SignIn> {
         // Extract token
         final token = data['token'];
         if (token == null) {
-          showSnackbarMessage(context, 'Token not found.');
+          showSnackBarMessage(context, 'Token not found.');
           return;
         }
 
         // Parse user data
         final userJson = data['data'];
         if (userJson == null) {
-          showSnackbarMessage(context, 'User data not found.');
+          showSnackBarMessage(context, 'User data not found.');
           return;
         }
 
@@ -191,9 +191,9 @@ class _SignInState extends State<SignIn> {
         final error = response.body?['message'] ??
             response.errorMessage ??
             'Login failed. Please check your credentials.';
-        showSnackbarMessage(context, error);
+        showSnackBarMessage(context, error);
       }
     } catch (e) {
       setState(() => _signInProgress = false);
-      showSnackbarMessage(context, 'Something went wrong: $e');
+      showSnackBarMessage(context, 'Something went wrong: $e');
     }}}

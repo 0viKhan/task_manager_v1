@@ -1,22 +1,20 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:task_manager/screejn/sign_In.dart';
-import 'package:task_manager/screejn/update_profile_screen.dart';
+import 'dart:convert';
 
-class TMAppBar extends StatefulWidget implements PreferredSizeWidget{
-  const TMAppBar({
-    super.key,
-  });
+import 'package:flutter/material.dart';
+
+import '../../data/Ui/controller/auth_controller.dart';
+import '../../screejn/sign_In.dart';
+import '../../screejn/update_profile_screen.dart';
+
+class TMAppBar extends StatefulWidget implements PreferredSizeWidget {
+  const TMAppBar({super.key});
 
   @override
   State<TMAppBar> createState() => _TMAppBarState();
 
-
   @override
-  // TODO: implement preferredSize
-  Size get preferredSize =>Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }
-
 
 class _TMAppBarState extends State<TMAppBar> {
   @override
@@ -24,25 +22,38 @@ class _TMAppBarState extends State<TMAppBar> {
     return AppBar(
       backgroundColor: Colors.green,
       title: GestureDetector(
-        onTap: _onTapProfile,
+        onTap: _onTapProfileBar,
         child: Row(
           children: [
-            CircleAvatar(),
-            const SizedBox(width: 16,),
-
+            CircleAvatar(
+              backgroundImage:
+              AuthController.userModel?.photo == null
+                  ? null
+                  : MemoryImage(
+                base64Decode(AuthController.userModel!.photo!),
+              ),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ovi', style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.white
-                  ),),
-
-                  Text('Ovikhan753@gmail.com', style: TextStyle(
+                  Text(
+                    AuthController.userModel!.fullName,
+                    style: TextStyle(
                       fontSize: 14,
-                      color: Colors.black
-                  ),)
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    AuthController.userModel!.email,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -53,13 +64,18 @@ class _TMAppBarState extends State<TMAppBar> {
     );
   }
 
-  void _onTapLogOutButton() {
+  Future<void> _onTapLogOutButton() async {
+    await AuthController.clearData();
     Navigator.pushNamedAndRemoveUntil(
-        context, SignIn.name, (predicate) => false);
-  }
-  void _onTapProfile() {
-    if(ModalRoute.of(context)!.settings.name!=UpdateProfileScreen.name)
-    Navigator.pushNamed(context, UpdateProfileScreen.name);
+      context,
+      SignIn.name,
+          (predicate) => false,
+    );
   }
 
+  void _onTapProfileBar() {
+    if (ModalRoute.of(context)!.settings.name != UpdateProfileScreen.name) {
+      Navigator.pushNamed(context, UpdateProfileScreen.name);
+    }
+  }
 }

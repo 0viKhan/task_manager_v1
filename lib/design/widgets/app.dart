@@ -79,7 +79,7 @@ class Taskmanager extends StatelessWidget {
         EmailPage.name: (context) => EmailPage(),
         PinVerification.name: (context) => PinVerification(),
         MainNavScreen.name: (context) => MainNavScreen(),
-        AddNewTask.name:(context)=>AddNewTask(),
+        AddNewTaskScreen.name:(context)=>AddNewTaskScreen(),
         UpdateProfileScreen.name:(context)=>UpdateProfileScreen(),
         SetPassword.name:(context)=>SetPassword()
 
