@@ -27,7 +27,7 @@ class AuthController {
       }
       return true;
     }
-    return false;
+    return      false;
   }
 
   static Future<void> clearData() async {
