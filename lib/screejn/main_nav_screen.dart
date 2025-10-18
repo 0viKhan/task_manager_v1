@@ -21,7 +21,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
     const NewTaskListScreen(),
     const ProgressTaskListScreen(),
     const CompletedTaskListScreen(),
-    const Cancelled_task_list_page(),
+    const CancelledTaskListScreen(),
   ];
 
   void _onItemTapped(int index) {
