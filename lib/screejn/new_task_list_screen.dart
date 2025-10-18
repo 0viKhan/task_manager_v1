@@ -100,6 +100,8 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       _newTaskList = (response.body!['data'] as List)
           .map((json) => TaskModel.fromJson(json))
           .toList();
+      _newTaskList.sort((a, b) =>
+          DateTime.parse(a.createdDate).compareTo(DateTime.parse(b.createdDate)));
     } else {
       if (mounted) showSnackBarMessage(context, response.errorMessage ?? 'Failed to load tasks');
     }
@@ -118,9 +120,12 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       _taskStatusCountList = (response.body!['data'] as List)
           .map((json) => TaskStatusCountModel.fromJson(json))
           .toList();
+
+
     } else {
       if (mounted) showSnackBarMessage(context, response.errorMessage ?? 'Failed to load summary');
     }
+
 
     _getTaskStatusCountInProgress = false;
     if (mounted) setState(() {});
