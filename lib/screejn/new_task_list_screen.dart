@@ -11,6 +11,7 @@ import 'add_new_task.dart';
 
 enum TaskType { tNew, progress, completed, cancelled }
 
+
 class NewTaskListScreen extends StatefulWidget {
   const NewTaskListScreen({super.key});
   static const String name = "NewTaskListScreen";
@@ -185,6 +186,8 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       case 'created':
         return 'New';
       case 'progress':
+      case 'Progress':
+
       case 'inprogress':
       case 'in progress':
         return 'Progress';

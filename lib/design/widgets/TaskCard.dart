@@ -72,7 +72,9 @@ class _TaskCardState extends State<TaskCard> {
     );
   }
 
-  Color _getTaskChipColor() {
+  Color _getTaskChipColor(
+
+      ) {
     switch (widget.taskType) {
       case TaskType.tNew:
         return Colors.blue;

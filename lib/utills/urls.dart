@@ -11,7 +11,9 @@ class Urls {
   // Tasks
   static const String createNewTaskUrl = '$_baseUrl/createTask';
   static const String getNewTaskUrl = '$_baseUrl/listTaskByStatus/New';
-  static const String getProgressTaskUrl = '$_baseUrl/listTaskByStatus/Progress';
+  static const String getProgressTaskUrl = '$_baseUrl/listTaskByStatus/In%20Progress';
+
+
   static const String getCompletedTaskUrl = '$_baseUrl/listTaskByStatus/Completed';
   static const String getCancelledTaskUrl = '$_baseUrl/listTaskByStatus/Cancelled';
 
@@ -21,7 +23,7 @@ class Urls {
   // Delete Task
   static String deleteTaskUrl(String taskId) => '$_baseUrl/deleteTask/$taskId';
 
-  // ✅ Update Task Status
+
   static String updateTaskStatusUrl(String taskId, String status) =>
       '$_baseUrl/updateTaskStatus/$taskId/$status';
 }
