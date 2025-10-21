@@ -8,12 +8,15 @@ import '../design/widgets/tm_app_bar.dart';
 import '../utills/Urls.dart';
 
 class AddNewTaskScreen extends StatefulWidget {
-  const AddNewTaskScreen({super.key});
+  final VoidCallback? onTaskAdded;
+  const AddNewTaskScreen({super.key, this.onTaskAdded});
+
 
   static const String name = '/add-new-task';
 
   @override
   State<AddNewTaskScreen> createState() => _AddNewTaskScreenState();
+
 }
 
 class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
@@ -22,6 +25,7 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
   TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _addNewTaskInProgress = false;
+
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +112,16 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
     if (response.isSuccess) {
       _titleTEController.clear();
       _descriptionTEController.clear();
+
       showSnackBarMessage(context, 'Added new task');
+
+      await Future.delayed(const Duration(seconds: 1));
+      widget.onTaskAdded?.call();
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+
     } else {
       showSnackBarMessage(context, response.errorMessage!);
     }

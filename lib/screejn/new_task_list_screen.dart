@@ -58,11 +58,13 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
 
   Widget _buildTaskSummary() {
     if (_isLoadingSummary) {
-      return const SizedBox(height: 150, child: CenteredCircularProgressIndicator());
+      return const SizedBox(
+          height: 150, child: CenteredCircularProgressIndicator());
     }
 
     if (_taskSummary.isEmpty) {
-      return const SizedBox(height: 150, child: Center(child: Text('No summary data available')));
+      return const SizedBox(
+          height: 150, child: Center(child: Text('No summary data available')));
     }
 
     return SizedBox(
@@ -136,10 +138,13 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       _tasks = (response.body!['data'] as List)
           .map((json) => TaskModel.fromJson(json))
           .toList()
-        ..sort((a, b) => DateTime.parse(b.createdDate).compareTo(DateTime.parse(a.createdDate)));
+        ..sort((a, b) =>
+            DateTime.parse(b.createdDate).compareTo(
+                DateTime.parse(a.createdDate)));
     } else {
       if (mounted) {
-        showSnackBarMessage(context, response.errorMessage ?? 'Failed to load tasks.');
+        showSnackBarMessage(
+            context, response.errorMessage ?? 'Failed to load tasks.');
       }
     }
 
@@ -149,19 +154,23 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
   Future<void> _fetchTaskSummary() async {
     setState(() => _isLoadingSummary = true);
 
-    final response = await NetworkCaller.getRequest(url: Urls.getTaskStatusCountUrl);
+    final response = await NetworkCaller.getRequest(
+        url: Urls.getTaskStatusCountUrl);
     if (response.isSuccess && response.body?['data'] is List) {
       Map<String, int> mergedSummary = {};
       for (var json in response.body!['data'] as List) {
         String rawId = json['_id']?.toString() ?? 'Unknown';
         String normalizedId = _normalizeStatus(rawId);
         int count = (json['sum'] ?? 0).toInt();
-        mergedSummary[normalizedId] = (mergedSummary[normalizedId] ?? 0) + count;
+        mergedSummary[normalizedId] =
+            (mergedSummary[normalizedId] ?? 0) + count;
       }
-      _taskSummary = mergedSummary.entries.map((e) => TaskStatusCountModel(id: e.key, count: e.value)).toList();
+      _taskSummary = mergedSummary.entries.map((e) =>
+          TaskStatusCountModel(id: e.key, count: e.value)).toList();
     } else {
       if (mounted) {
-        showSnackBarMessage(context, response.errorMessage ?? 'Failed to load task summary.');
+        showSnackBarMessage(
+            context, response.errorMessage ?? 'Failed to load task summary.');
       }
     }
 
@@ -190,7 +199,16 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
     }
   }
 
-  void _navigateToAddTask() {
-    Navigator.pushNamed(context, AddNewTaskScreen.name);
+  Future<void> _navigateToAddTask() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            AddNewTaskScreen(onTaskAdded: () {
+              _fetchTasks();
+              _fetchTaskSummary();
+            }),
+      ),
+    );
   }
 }
