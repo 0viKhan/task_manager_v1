@@ -195,9 +195,15 @@ class _TaskCardState extends State<TaskCard> {
     }
   }
 
-  _monthName(int month) {}
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
 
- 
+
 
 
 
