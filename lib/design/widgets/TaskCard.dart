@@ -25,6 +25,7 @@ class TaskCard extends StatefulWidget {
 
 class _TaskCardState extends State<TaskCard> {
   bool _updateTaskStatusInProgress = false;
+  bool _deleteTaskInProgress=false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +51,11 @@ class _TaskCardState extends State<TaskCard> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(onPressed: _deleteTask, icon: const Icon(Icons.delete)),
+                Visibility(
+                    visible: !_deleteTaskInProgress,
+                    replacement: CircularProgressIndicator(),
+
+                    child: IconButton(onPressed: _deleteTask, icon: const Icon(Icons.delete))),
                 Visibility(
                   visible: !_updateTaskStatusInProgress,
                   replacement: const CenteredCircularProgressIndicator(),
@@ -143,6 +148,36 @@ class _TaskCardState extends State<TaskCard> {
   }
 
   Future<void> _deleteTask() async {
-    // You can implement your delete API here later
+    final confirm=await showDialog(context: context,
+        builder: (ctx)=>AlertDialog(
+          title: const Text('DeleteTask'),
+          content: const Text('Are You sure'),
+          actions: [
+            TextButton(onPressed: ()=>Navigator.pop(ctx,false),
+                child: const Text('Cancel')),
+            ElevatedButton(onPressed: ()=>Navigator.pop(ctx,true),
+
+                child: const Text('Delete'))
+          ],
+        )
+
+
+    );
+    if(confirm!=true) return;
+    setState(()=>_deleteTaskInProgress=true);
+    final response =await NetworkCaller.getRequest(url: Urls.deleteTaskUrl(widget.taskModel.id));
+    if(response.isSuccess)
+      {
+        if(mounted)
+          showSnackBarMessage(context,'Task Deleted');
+        widget.onStatusUpdate();
+      }
+
+    else
+    {
+ if(mounted)
+   showSnackBarMessage(context, response.errorMessage??'Delete Failed');
+    }
   }
+
 }
