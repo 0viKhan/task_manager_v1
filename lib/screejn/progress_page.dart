@@ -6,6 +6,7 @@ import '../design/widgets/TaskCard.dart';
 import '../design/widgets/centered_circular_progress_indicator.dart';
 import '../design/widgets/snack_bar_message.dart';
 import '../utills/Urls.dart';
+import 'new_task_list_screen.dart';
 
 class ProgressTaskListScreen extends StatefulWidget {
   const ProgressTaskListScreen({super.key});

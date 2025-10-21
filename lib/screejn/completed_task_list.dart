@@ -6,6 +6,8 @@ import 'package:task_manager/design/widgets/TaskCard.dart';
 import 'package:task_manager/design/widgets/snack_bar_message.dart';
 import 'package:task_manager/utills/Urls.dart';
 
+import 'new_task_list_screen.dart';
+
 class CompletedTaskListScreen extends StatefulWidget {
   const CompletedTaskListScreen({super.key});
 

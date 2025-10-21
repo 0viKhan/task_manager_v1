@@ -2,9 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager/design/widgets/tm_app_bar.dart';
 import 'package:task_manager/screejn/Cancelled_task_list.dart';
+import 'package:task_manager/screejn/add_new_task.dart';
 import 'package:task_manager/screejn/completed_task_list.dart';
-import 'package:task_manager/screejn/new_task_list_screen.dart';
 import 'package:task_manager/screejn/progress_page.dart';
+
+import 'new_task_list_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
   const MainNavScreen({super.key});
@@ -18,11 +20,12 @@ class _MainNavScreenState extends State<MainNavScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const NewTaskListScreen(),
+    const NewTaskListScreen(), // <-- show this first
     const ProgressTaskListScreen(),
     const CompletedTaskListScreen(),
     const CancelledTaskListScreen(),
   ];
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -48,4 +51,3 @@ class _MainNavScreenState extends State<MainNavScreen> {
     );
   }
 }
-
