@@ -9,6 +9,8 @@ import '../utills/Urls.dart';
 
 class AddNewTaskScreen extends StatefulWidget {
   final VoidCallback? onTaskAdded;
+
+
   const AddNewTaskScreen({super.key, this.onTaskAdded});
 
 
@@ -21,6 +23,8 @@ class AddNewTaskScreen extends StatefulWidget {
 
 class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
   final TextEditingController _titleTEController = TextEditingController();
+
+
   final TextEditingController _descriptionTEController =
   TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -94,11 +98,16 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
   Future<void> _addNewTask() async {
     _addNewTaskInProgress = true;
     setState(() {});
+    final now = DateTime.now();
+    final formattedLocalTime = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+// ✅ runs when task is submitted
 
     Map<String, String> requestBody = {
       "title": _titleTEController.text.trim(),
       "description": _descriptionTEController.text.trim(),
       "status": "New",
+      "createdDate": formattedLocalTime,
     };
 
     NetworkResponse response = await NetworkCaller.postRequest(

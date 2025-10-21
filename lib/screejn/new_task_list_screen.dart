@@ -186,7 +186,6 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       case 'created':
         return 'New';
       case 'progress':
-      case 'Progress':
 
       case 'inprogress':
       case 'in progress':

@@ -13,6 +13,7 @@ class TaskCard extends StatefulWidget {
     required this.taskType,
     required this.taskModel,
     required this.onStatusUpdate,
+
   });
 
   final TaskType taskType;
@@ -39,7 +40,8 @@ class _TaskCardState extends State<TaskCard> {
           children: [
             Text(widget.taskModel.title, style: Theme.of(context).textTheme.titleMedium),
             Text(widget.taskModel.description, style: const TextStyle(color: Colors.black54)),
-            Text('Date: ${widget.taskModel.createdDate}'),
+            Text('Created: ${_formatDateTime(widget.taskModel.createdDate)}'),
+
             const SizedBox(height: 8),
             Row(
               children: [
@@ -181,5 +183,27 @@ class _TaskCardState extends State<TaskCard> {
    showSnackBarMessage(context, response.errorMessage??'Delete Failed');
     }
   }
+  String _formatDateTime(String rawDate) {
+    try {
+      final dateTime = DateTime.parse(rawDate); // No need for .toLocal() if already local
+      final date = '${dateTime.day.toString().padLeft(2, '0')} '
+          '${_monthName(dateTime.month)} ${dateTime.year}';
+      final time = TimeOfDay.fromDateTime(dateTime).format(context);
+      return '$date, $time';
+    } catch (_) {
+      return rawDate;
+    }
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
+
+
+
 
 }
