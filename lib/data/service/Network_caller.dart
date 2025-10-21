@@ -115,7 +115,7 @@ class NetworkCaller {
 
   static void _logResponse(String url, Response response) {
     debugPrint(
-        '===============Response===============\nUrl:$url\nSTATUS CODE:${response.statusCode}\nBODY:${response.body}\n===============Response End===============');
+        '==============Response===============\nUrl:$url\nSTATUS CODE:${response.statusCode}\nBODY:${response.body}\n===============Response End===============');
   }
 
   static Future<void> _handleUnauthorized() async {
