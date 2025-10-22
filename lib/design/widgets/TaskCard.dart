@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/task_models.dart';
-import '../../data/service/network_caller.dart';
+import '../../data/service/Network_caller.dart';
+import '../../data/service/network_caller.dart' hide NetworkCaller;
 import '../../screejn/new_task_list_screen.dart';
 import '../../utills/urls.dart';
 import 'centered_circular_progress_indicator.dart';
@@ -171,16 +172,16 @@ class _TaskCardState extends State<TaskCard> {
     setState(()=>_deleteTaskInProgress=true);
     final response =await NetworkCaller.getRequest(url: Urls.deleteTaskUrl(widget.taskModel.id));
     if(response.isSuccess)
-      {
-        if(mounted)
-          showSnackBarMessage(context,'Task Deleted');
-        widget.onStatusUpdate();
-      }
+    {
+      if(mounted)
+        showSnackBarMessage(context,'Task Deleted');
+      widget.onStatusUpdate();
+    }
 
     else
     {
- if(mounted)
-   showSnackBarMessage(context, response.errorMessage??'Delete Failed');
+      if(mounted)
+        showSnackBarMessage(context, response.errorMessage??'Delete Failed');
     }
   }
   String _formatDateTime(String rawDate) {

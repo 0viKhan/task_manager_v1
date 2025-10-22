@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager/data/service/network_caller.dart';
+import 'package:task_manager/data/service/network_caller.dart' hide NetworkResponse, NetworkCaller;
 
+import '../data/service/Network_caller.dart' show NetworkResponse, NetworkCaller;
 import '../design/widgets/centered_circular_progress_indicator.dart';
 import '../design/widgets/screen_background.dart';
 import '../design/widgets/snack_bar_message.dart';

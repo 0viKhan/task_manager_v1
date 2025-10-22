@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -26,13 +27,13 @@ class _TMAppBarState extends State<TMAppBar> {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundImage:
-              AuthController.userModel?.photo == null
-                  ? null
-                  : MemoryImage(
-                base64Decode(AuthController.userModel!.photo!),
-              ),
+              backgroundImage: _buildProfileImage(AuthController.userModel?.photo),
+              child: AuthController.userModel?.photo == null || AuthController.userModel!.photo.isEmpty
+                  ? const Icon(Icons.person, color: Colors.white)
+                  : null,
             ),
+
+
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -62,6 +63,22 @@ class _TMAppBarState extends State<TMAppBar> {
         ),
       ),
     );
+
+  }
+  ImageProvider? _buildProfileImage(String? photo) {
+    if (photo == null || photo.isEmpty) return null;
+
+    try {
+      if (photo.startsWith('http')) {
+        return NetworkImage(photo);
+      } else if (photo.contains('/') && !photo.contains('base64')) {
+        return FileImage(File(photo));
+      } else {
+        return MemoryImage(base64Decode(photo));
+      }
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _onTapLogOutButton() async {

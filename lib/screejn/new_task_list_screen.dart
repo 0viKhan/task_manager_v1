@@ -5,6 +5,7 @@ import '../../data/models/task_models.dart';
 import '../../data/models/task_status_count.dart';
 import '../../data/service/network_caller.dart';
 import '../../utills/urls.dart';
+import '../data/service/Network_caller.dart' hide NetworkCaller;
 import '../design/widgets/TaskCard.dart';
 import '../design/widgets/task_count_summary.dart';
 import 'add_new_task.dart';

@@ -1,7 +1,9 @@
+
+
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 import '../data/Ui/controller/auth_controller.dart';
@@ -9,6 +11,7 @@ import '../data/models/user_models.dart';
 import '../data/service/Network_caller.dart';
 import '../design/widgets/centered_circular_progress_indicator.dart';
 import '../design/widgets/screen_background.dart';
+import '../design/widgets/snack_bar_message.dart';
 import '../design/widgets/tm_app_bar.dart';
 import '../utills/Urls.dart';
 
@@ -195,63 +198,90 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     }
   }
 
+
+
   Future<void> _updateProfile() async {
     setState(() => _updateProfileInProgress = true);
 
-    Uint8List? imageBytes;
-    final requestBody = {
-      "email": _emailTEController.text,
-      "firstName": _firstNameTEController.text.trim(),
-      "lastName": _lastNameTEController.text.trim(),
-      "mobile": _phoneTEController.text.trim(),
-    };
+    try {
+      final uri = Uri.parse(Urls.updateProfileUrl);
+      final request = http.MultipartRequest('POST', uri);
 
-    if (_passwordTEController.text.isNotEmpty) {
-      requestBody['password'] = _passwordTEController.text;
-    }
+      // Add token for authorization
+      final token = AuthController.accessToken ?? '';
+      request.headers['token'] = token;
+      debugPrint('Token: $token');
 
-    if (_selectedImage != null) {
-      imageBytes = await _selectedImage!.readAsBytes();
-      requestBody['photo'] = base64Encode(imageBytes);
-    }
+      // Add form fields
+      request.fields['email'] = _emailTEController.text.trim();
+      request.fields['firstName'] = _firstNameTEController.text.trim();
+      request.fields['lastName'] = _lastNameTEController.text.trim();
+      request.fields['mobile'] = _phoneTEController.text.trim();
 
-    final response = await NetworkCaller.postRequest(
-      url: Urls.updateProfileUrl,
-      body: requestBody,
-    );
+      if (_passwordTEController.text.isNotEmpty) {
+        request.fields['password'] = _passwordTEController.text;
+      }
 
-    if (!mounted) return;
-    setState(() => _updateProfileInProgress = false);
+      // Add photo if selected
+      if (_selectedImage != null) {
+        debugPrint('Uploading photo: ${_selectedImage!.path}');
+        request.files.add(
+          await http.MultipartFile.fromPath('photo', _selectedImage!.path),
+        );
+      } else {
+        debugPrint('No photo selected.');
+      }
 
-    if (response.isSuccess) {
-      final userModel = UserModel(
-        id: AuthController.userModel!.id,
-        email: _emailTEController.text,
-        firstName: _firstNameTEController.text.trim(),
-        lastName: _lastNameTEController.text.trim(),
-        mobile: _phoneTEController.text.trim(),
-        photo: imageBytes == null
-            ? AuthController.userModel!.photo
-            : base64Encode(imageBytes),
-      );
+      // Send request
+      final streamedResponse = await request.send();
 
-      await AuthController.updateUserData(userModel);
-      _passwordTEController.clear();
-      showSnackBarMessage(context, 'Profile updated successfully!');
-    } else {
-      showSnackBarMessage(context, response.errorMessage ?? 'Update failed');
+      // Read full response
+      final responseBody = await streamedResponse.stream.bytesToString();
+      debugPrint('Response Status: ${streamedResponse.statusCode}');
+      debugPrint('Response Body: $responseBody');
+
+      if (!mounted) return;
+
+      setState(() => _updateProfileInProgress = false);
+
+      if (streamedResponse.statusCode == 200) {
+        final responseJson = jsonDecode(responseBody);
+        final updatedPhotoPath = responseJson['data']?['photo'] ?? '';
+        debugPrint('Updated photo path: $updatedPhotoPath');
+
+        // Update local user data
+        final userModel = UserModel(
+          id: AuthController.userModel!.id,
+          email: _emailTEController.text.trim(),
+          firstName: _firstNameTEController.text.trim(),
+          lastName: _lastNameTEController.text.trim(),
+          mobile: _phoneTEController.text.trim(),
+          photo: updatedPhotoPath.isNotEmpty
+              ? updatedPhotoPath
+              : _selectedImage?.path ?? AuthController.userModel!.photo,
+        );
+
+        await AuthController.updateUserData(userModel);
+        _passwordTEController.clear();
+        showSnackBarMessage(context, 'Profile updated successfully!');
+      } else {
+        // Show server error message if exists
+        String errorMessage = 'Update failed. Try again.';
+        try {
+          final errorJson = jsonDecode(responseBody);
+          if (errorJson['message'] != null) errorMessage = errorJson['message'];
+        } catch (_) {}
+        showSnackBarMessage(context, errorMessage);
+      }
+    } catch (e, st) {
+      setState(() => _updateProfileInProgress = false);
+      debugPrint('Exception occurred: $e');
+      debugPrint('Stack trace: $st');
+      showSnackBarMessage(context, 'Error occurred. Check logs.');
     }
   }
 
-  // ✅ Snackbar helper
-  void showSnackBarMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+
 
   @override
   void dispose() {
