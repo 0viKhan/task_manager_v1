@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/data/models/task_models.dart';
 import 'package:task_manager/data/service/Network_caller.dart';
 import 'package:task_manager/design/widgets/TaskCard.dart';
+import 'package:task_manager/design/widgets/screen_background.dart';
 import 'package:task_manager/design/widgets/snack_bar_message.dart';
 import 'package:task_manager/utills/Urls.dart';
 
@@ -28,25 +29,28 @@ class _CancelledTaskListScreenState extends State<CancelledTaskListScreen> {
   }
 
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Visibility(
-        visible: _getCancelledTaskListInProgress==false,
-        replacement: CircularProgressIndicator(),
-        child: ListView.builder(
-          itemCount: _CancelledTaskList.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              taskType: TaskType.completed,
-              taskModel: _CancelledTaskList[index],
-              onStatusUpdate: () {
-                _getCompletedTaskList();
-              },
-            );
-          },
-        ),
-      ),
+    return ScreenBackground(
 
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Visibility(
+          visible: _getCancelledTaskListInProgress==false,
+          replacement: CircularProgressIndicator(),
+          child: ListView.builder(
+            itemCount: _CancelledTaskList.length,
+            itemBuilder: (context, index) {
+              return TaskCard(
+                taskType: TaskType.completed,
+                taskModel: _CancelledTaskList[index],
+                onStatusUpdate: () {
+                  _getCompletedTaskList();
+                },
+              );
+            },
+          ),
+        ),
+
+      ),
     );
   }
 

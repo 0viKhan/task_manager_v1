@@ -9,6 +9,8 @@ import '../data/service/Network_caller.dart' hide NetworkCaller;
 import '../design/widgets/TaskCard.dart';
 import '../design/widgets/task_count_summary.dart';
 import 'add_new_task.dart';
+import '../design/widgets/screen_background.dart';
+
 
 enum TaskType { tNew, progress, completed, cancelled }
 
@@ -39,24 +41,29 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Task List")),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
+    return ScreenBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text("Task List"),
+        ),
+        body: Column(
           children: [
             _buildTaskSummary(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 0),
             _buildTaskList(),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddTask,
-        child: const Icon(Icons.add),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _navigateToAddTask,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
+
 
   Widget _buildTaskSummary() {
     if (_isLoadingSummary) {
@@ -104,6 +111,7 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
             taskModel: task,
             taskType: _mapStatusToTaskType(task.status),
             onStatusUpdate: _fetchTasks,
+            onTap: () => _navigateToEditTask(task),
           );
         },
       ),
@@ -200,6 +208,26 @@ class _NewTaskListScreenState extends State<NewTaskListScreen> {
       default:
         return 'Unknown';
     }
+  }
+  Future<void> _navigateToEditTask(TaskModel task) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddNewTaskScreen(
+          task: {
+            'id': task.id,
+            'title': task.title,
+            'description': task.description,
+            'status': task.status,
+            'createdDate': task.createdDate,
+          },
+          onTaskAdded: () {
+            _fetchTasks();
+            _fetchTaskSummary();
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _navigateToAddTask() async {

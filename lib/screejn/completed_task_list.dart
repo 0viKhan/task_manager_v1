@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/data/models/task_models.dart';
 import 'package:task_manager/data/service/Network_caller.dart';
 import 'package:task_manager/design/widgets/TaskCard.dart';
+import 'package:task_manager/design/widgets/screen_background.dart';
 import 'package:task_manager/design/widgets/snack_bar_message.dart';
 import 'package:task_manager/utills/Urls.dart';
 
@@ -28,25 +29,27 @@ class _CompletedTaskListScreenState extends State<CompletedTaskListScreen> {
   }
 
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Visibility(
-        visible: _getCompletedTaskListInProgress==false,
-        replacement: CircularProgressIndicator(),
-        child: ListView.builder(
-          itemCount: _CompletedTaskList.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              taskType: TaskType.completed,
-              taskModel: _CompletedTaskList[index],
-              onStatusUpdate: () {
-                _getCompletedTaskList();
-              },
-            );
-          },
+    return ScreenBackground(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Visibility(
+          visible: _getCompletedTaskListInProgress==false,
+          replacement: CircularProgressIndicator(),
+          child: ListView.builder(
+            itemCount: _CompletedTaskList.length,
+            itemBuilder: (context, index) {
+              return TaskCard(
+                taskType: TaskType.completed,
+                taskModel: _CompletedTaskList[index],
+                onStatusUpdate: () {
+                  _getCompletedTaskList();
+                },
+              );
+            },
+          ),
         ),
+      
       ),
-
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager/design/widgets/screen_background.dart';
 
 import '../data/models/task_models.dart';
 import '../data/service/Network_caller.dart';
@@ -29,22 +30,24 @@ class _ProgressTaskListScreenState extends State<ProgressTaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Visibility(
-        visible: _getProgressTasksInProgress == false,
-        replacement: CenteredCircularProgressIndicator(),
-        child: ListView.builder(
-          itemCount: _progressTaskList.length,
-          itemBuilder: (context, index) {
-            return TaskCard(
-              taskType: TaskType.progress,
-              taskModel: _progressTaskList[index],
-              onStatusUpdate: () {
-                _getProgressTaskList();
-              },
-            );
-          },
+    return ScreenBackground(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Visibility(
+          visible: _getProgressTasksInProgress == false,
+          replacement: CenteredCircularProgressIndicator(),
+          child: ListView.builder(
+            itemCount: _progressTaskList.length,
+            itemBuilder: (context, index) {
+              return TaskCard(
+                taskType: TaskType.progress,
+                taskModel: _progressTaskList[index],
+                onStatusUpdate: () {
+                  _getProgressTaskList();
+                },
+              );
+            },
+          ),
         ),
       ),
     );

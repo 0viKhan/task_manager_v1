@@ -9,11 +9,14 @@ import 'snack_bar_message.dart';
 
 
 class TaskCard extends StatefulWidget {
+  final VoidCallback? onTap;
   const TaskCard({
     super.key,
     required this.taskType,
     required this.taskModel,
     required this.onStatusUpdate,
+    this.onTap,
+
 
   });
 
@@ -31,45 +34,52 @@ class _TaskCardState extends State<TaskCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.taskModel.title, style: Theme.of(context).textTheme.titleMedium),
-            Text(widget.taskModel.description, style: const TextStyle(color: Colors.black54)),
-            Text('Created: ${_formatDateTime(widget.taskModel.createdDate)}'),
-
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Chip(
-                  label: Text(_getTaskTypeName(), style: const TextStyle(color: Colors.white)),
-                  backgroundColor: _getTaskChipColor(),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () => widget.onTap?.call(),
+      child: Card(
+        elevation: 0,
+        color: Colors.white.withOpacity(0.7),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.taskModel.title, style: Theme.of(context).textTheme.titleMedium),
+              Text(widget.taskModel.description, style: const TextStyle(color: Colors.black54)),
+              Text('Created: ${_formatDateTime(widget.taskModel.createdDate)}'),
+      
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Chip(
+                    label: Text(_getTaskTypeName(), style: const TextStyle(color: Colors.white)),
+                    backgroundColor: _getTaskChipColor(),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Visibility(
-                    visible: !_deleteTaskInProgress,
-                    replacement: CircularProgressIndicator(),
-
-                    child: IconButton(onPressed: _deleteTask, icon: const Icon(Icons.delete))),
-                Visibility(
-                  visible: !_updateTaskStatusInProgress,
-                  replacement: const CenteredCircularProgressIndicator(),
-                  child: IconButton(
-                    onPressed: _showEditTaskStatusDialog,
-                    icon: const Icon(Icons.edit),
+                  const Spacer(),
+                  Visibility(
+                      visible: !_deleteTaskInProgress,
+                      replacement: CircularProgressIndicator(),
+      
+                      child: IconButton(onPressed: _deleteTask, icon: const Icon(Icons.delete,
+                      color: Colors.red,
+                      ))),
+                  Visibility(
+                    visible: !_updateTaskStatusInProgress,
+                    replacement: const CenteredCircularProgressIndicator(),
+                    child: IconButton(
+                      onPressed: _showEditTaskStatusDialog,
+                      icon: const Icon(Icons.edit,
+                      color: Colors.blue,
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -81,6 +91,7 @@ class _TaskCardState extends State<TaskCard> {
     switch (widget.taskType) {
       case TaskType.tNew:
         return Colors.blue;
+
       case TaskType.progress:
         return Colors.purple;
       case TaskType.completed:
