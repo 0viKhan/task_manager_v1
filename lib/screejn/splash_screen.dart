@@ -39,9 +39,6 @@ class _SplashScreen extends State<SplashScreen> {
           SignIn.name) ;
     }
 
-
-
-
   }
   @override
   Widget build(BuildContext context) {

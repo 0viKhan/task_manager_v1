@@ -179,7 +179,7 @@ class NetworkCaller {
     }
   }
 
-  // ================== CACHING ==================
+
   static Future<void> _cacheResponse(String url, Map<String, dynamic> body) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(url, jsonEncode(body));

@@ -1,14 +1,11 @@
-
-
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/Ui/controller/auth_controller.dart';
 import '../data/models/user_models.dart';
-import '../data/service/Network_caller.dart';
 import '../design/widgets/centered_circular_progress_indicator.dart';
 import '../design/widgets/screen_background.dart';
 import '../design/widgets/snack_bar_message.dart';
@@ -34,20 +31,31 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final ImagePicker _imagePicker = ImagePicker();
 
   XFile? _selectedImage;
+  String? _localPhotoPath;
   bool _updateProfileInProgress = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadLocalPhoto();
   }
 
+  // Load current user data
   void _loadUserData() {
     final user = AuthController.userModel;
     _emailTEController.text = user?.email ?? '';
     _firstNameTEController.text = user?.firstName ?? '';
     _lastNameTEController.text = user?.lastName ?? '';
     _phoneTEController.text = user?.mobile ?? '';
+  }
+
+  // Load locally stored photo path
+  Future<void> _loadLocalPhoto() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _localPhotoPath = prefs.getString('local_photo_path');
+    });
   }
 
   @override
@@ -91,40 +99,27 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       children: [
         TextFormField(
           controller: _emailTEController,
-          textInputAction: TextInputAction.next,
           enabled: false,
           decoration: const InputDecoration(labelText: 'Email'),
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _firstNameTEController,
-          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(hintText: 'First name'),
-          validator: (value) {
-            if (value?.trim().isEmpty ?? true) return 'Enter your first name';
-            return null;
-          },
+          validator: (value) => (value?.trim().isEmpty ?? true) ? 'Enter your first name' : null,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _lastNameTEController,
-          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(hintText: 'Last name'),
-          validator: (value) {
-            if (value?.trim().isEmpty ?? true) return 'Enter your last name';
-            return null;
-          },
+          validator: (value) => (value?.trim().isEmpty ?? true) ? 'Enter your last name' : null,
         ),
         const SizedBox(height: 8),
         TextFormField(
           controller: _phoneTEController,
           keyboardType: TextInputType.phone,
-          textInputAction: TextInputAction.next,
           decoration: const InputDecoration(hintText: 'Mobile'),
-          validator: (value) {
-            if (value?.trim().isEmpty ?? true) return 'Enter your mobile number';
-            return null;
-          },
+          validator: (value) => (value?.trim().isEmpty ?? true) ? 'Enter your mobile number' : null,
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -132,8 +127,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           obscureText: true,
           decoration: const InputDecoration(hintText: 'Password'),
           validator: (value) {
-            final length = value?.length ?? 0;
-            if (length > 0 && length <= 6) {
+            if ((value?.length ?? 0) > 0 && (value?.length ?? 0) <= 6) {
               return 'Enter a password longer than 6 characters';
             }
             return null;
@@ -144,6 +138,9 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   Widget _buildPhotoPicker() {
+    final displayText = _selectedImage?.name ??
+        (_localPhotoPath != null ? _localPhotoPath!.split('/').last : 'Select image');
+
     return GestureDetector(
       onTap: _onTapPhotoPicker,
       child: Container(
@@ -173,11 +170,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                _selectedImage == null ? 'Select image' : _selectedImage!.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(displayText, maxLines: 1, overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
@@ -188,17 +181,18 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   Future<void> _onTapPhotoPicker() async {
     final pickedImage = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
-      setState(() => _selectedImage = pickedImage);
+      setState(() {
+        _selectedImage = pickedImage;
+        _localPhotoPath = pickedImage.path;
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('local_photo_path', pickedImage.path);
     }
   }
 
   void _onTapSubmitButton() {
-    if (_formKey.currentState!.validate()) {
-      _updateProfile();
-    }
+    if (_formKey.currentState!.validate()) _updateProfile();
   }
-
-
 
   Future<void> _updateProfile() async {
     setState(() => _updateProfileInProgress = true);
@@ -207,49 +201,36 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       final uri = Uri.parse(Urls.updateProfileUrl);
       final request = http.MultipartRequest('POST', uri);
 
-      // Add token for authorization
-      final token = AuthController.accessToken ?? '';
-      request.headers['token'] = token;
-      debugPrint('Token: $token');
+      // Add token
+      request.headers['token'] = AuthController.accessToken ?? '';
 
       // Add form fields
       request.fields['email'] = _emailTEController.text.trim();
       request.fields['firstName'] = _firstNameTEController.text.trim();
       request.fields['lastName'] = _lastNameTEController.text.trim();
       request.fields['mobile'] = _phoneTEController.text.trim();
-
       if (_passwordTEController.text.isNotEmpty) {
         request.fields['password'] = _passwordTEController.text;
       }
 
       // Add photo if selected
       if (_selectedImage != null) {
-        debugPrint('Uploading photo: ${_selectedImage!.path}');
-        request.files.add(
-          await http.MultipartFile.fromPath('photo', _selectedImage!.path),
-        );
-      } else {
-        debugPrint('No photo selected.');
+        request.files.add(await http.MultipartFile.fromPath('photo', _selectedImage!.path));
       }
 
-      // Send request
       final streamedResponse = await request.send();
-
-      // Read full response
       final responseBody = await streamedResponse.stream.bytesToString();
-      debugPrint('Response Status: ${streamedResponse.statusCode}');
-      debugPrint('Response Body: $responseBody');
-
-      if (!mounted) return;
-
       setState(() => _updateProfileInProgress = false);
 
       if (streamedResponse.statusCode == 200) {
         final responseJson = jsonDecode(responseBody);
         final updatedPhotoPath = responseJson['data']?['photo'] ?? '';
-        debugPrint('Updated photo path: $updatedPhotoPath');
 
-        // Update local user data
+        if (updatedPhotoPath.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('local_photo_path');
+        }
+
         final userModel = UserModel(
           id: AuthController.userModel!.id,
           email: _emailTEController.text.trim(),
@@ -258,14 +239,13 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           mobile: _phoneTEController.text.trim(),
           photo: updatedPhotoPath.isNotEmpty
               ? updatedPhotoPath
-              : _selectedImage?.path ?? AuthController.userModel!.photo,
+              : _localPhotoPath ?? AuthController.userModel!.photo,
         );
 
         await AuthController.updateUserData(userModel);
         _passwordTEController.clear();
         showSnackBarMessage(context, 'Profile updated successfully!');
       } else {
-        // Show server error message if exists
         String errorMessage = 'Update failed. Try again.';
         try {
           final errorJson = jsonDecode(responseBody);
@@ -273,15 +253,11 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         } catch (_) {}
         showSnackBarMessage(context, errorMessage);
       }
-    } catch (e, st) {
+    } catch (e) {
       setState(() => _updateProfileInProgress = false);
-      debugPrint('Exception occurred: $e');
-      debugPrint('Stack trace: $st');
       showSnackBarMessage(context, 'Error occurred. Check logs.');
     }
   }
-
-
 
   @override
   void dispose() {

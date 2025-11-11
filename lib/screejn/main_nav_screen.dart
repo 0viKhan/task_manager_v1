@@ -20,7 +20,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const NewTaskListScreen(), // <-- show this first
+    const NewTaskListScreen(),
     const ProgressTaskListScreen(),
     const CompletedTaskListScreen(),
     const CancelledTaskListScreen(),

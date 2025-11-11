@@ -147,6 +147,8 @@ class _SetPasswordState extends State<SetPassword> {
                             ..onTap = () {
                               Navigator.pushReplacementNamed(context, SignIn.name);
                             },
+
+
                         ),
                       ],
                     ),
