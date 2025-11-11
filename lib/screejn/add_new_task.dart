@@ -11,12 +11,7 @@ class AddNewTaskScreen extends StatefulWidget {
   final VoidCallback? onTaskAdded;
   final Map<String, dynamic>? task;
 
-  const AddNewTaskScreen({
-    super.key,
-    this.onTaskAdded,
-    this.task,
-  });
-
+  const AddNewTaskScreen({super.key, this.onTaskAdded, this.task});
   static const String name = '/add-new-task';
 
   @override
@@ -24,8 +19,8 @@ class AddNewTaskScreen extends StatefulWidget {
 }
 
 class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
-  final TextEditingController _titleTEController = TextEditingController();
-  final TextEditingController _descriptionTEController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _inProgress = false;
 
@@ -33,8 +28,8 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
   void initState() {
     super.initState();
     if (widget.task != null) {
-      _titleTEController.text = widget.task!['title'] ?? '';
-      _descriptionTEController.text = widget.task!['description'] ?? '';
+      _titleController.text = widget.task!['title'] ?? '';
+      _descriptionController.text = widget.task!['description'] ?? '';
     }
   }
 
@@ -60,15 +55,17 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _titleTEController,
-                  validator: (value) => (value?.trim().isEmpty ?? true) ? 'Enter your title' : null,
+                  controller: _titleController,
+                  validator: (value) =>
+                  (value?.trim().isEmpty ?? true) ? 'Enter your title' : null,
                   decoration: const InputDecoration(hintText: 'Title'),
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  controller: _descriptionTEController,
+                  controller: _descriptionController,
                   maxLines: 5,
-                  validator: (value) => (value?.trim().isEmpty ?? true) ? 'Enter your description' : null,
+                  validator: (value) =>
+                  (value?.trim().isEmpty ?? true) ? 'Enter your description' : null,
                   decoration: const InputDecoration(hintText: 'Description'),
                 ),
                 const SizedBox(height: 16),
@@ -97,67 +94,77 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
   Future<void> _addNewTask() async {
     setState(() => _inProgress = true);
 
-    final now = DateTime.now();
-    final formattedDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-
     final requestBody = <String, String>{
-      "title": _titleTEController.text.trim(),
-      "description": _descriptionTEController.text.trim(),
+      "title": _titleController.text.trim(),
+      "description": _descriptionController.text.trim(),
       "status": "New",
-      "createdDate": formattedDate,
+      "createdDate": DateTime.now().toIso8601String(),
     };
 
-    final response = await NetworkCaller.postRequest(
-      url: Urls.createNewTaskUrl,
-      body: requestBody,
-    );
+    try {
+      final response = await NetworkCaller.postRequest(
+        url: Urls.createNewTaskUrl,
+        body: requestBody,
+      );
 
-    setState(() => _inProgress = false);
+      setState(() => _inProgress = false);
 
-    if (response.isSuccess) {
-      _titleTEController.clear();
-      _descriptionTEController.clear();
-      showSnackBarMessage(context, 'Task added successfully');
-      widget.onTaskAdded?.call();
-      if (mounted) Navigator.pop(context, true);
-    } else {
-      showSnackBarMessage(context, response.errorMessage ?? 'Failed to add task');
+      if (response.isSuccess) {
+        _titleController.clear();
+        _descriptionController.clear();
+        showSnackBarMessage(context, 'Task added successfully');
+        widget.onTaskAdded?.call();
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        showSnackBarMessage(
+            context, response.errorMessage ?? 'Failed to add task.');
+      }
+    } catch (e) {
+      setState(() => _inProgress = false);
+      showSnackBarMessage(context, 'Failed to add task: $e');
     }
   }
 
   Future<void> _updateTask() async {
+    if (widget.task == null) return;
+
     setState(() => _inProgress = true);
 
+    // All values must be String
     final requestBody = <String, String>{
-      "title": _titleTEController.text.trim(),
-      "description": _descriptionTEController.text.trim(),
-      "status": widget.task!['status']?.toString() ?? 'New',
-      "createdDate": widget.task!['createdDate']?.toString() ?? '',
+      "id": widget.task!['id'].toString(),
+      "title": _titleController.text.trim(),
+      "description": _descriptionController.text.trim(),
+      "status": (widget.task?['status'] ?? "New").toString(),
+      "createdDate": (widget.task?['createdDate'] ?? DateTime.now().toIso8601String()).toString(),
     };
 
-    final updateUrl = Urls.updateTaskUrl(widget.task!['id']);
+    try {
+      final response = await NetworkCaller.postRequest(
+        url: Urls.updateTaskUrl(''), // just /updateTask
+        body: requestBody,
+      );
 
-    final response = await NetworkCaller.postRequest(
-      url: updateUrl,
-      body: requestBody,
-    );
+      setState(() => _inProgress = false);
 
-    setState(() => _inProgress = false);
-
-    if (response.isSuccess) {
-      showSnackBarMessage(context, 'Task updated successfully');
-      widget.onTaskAdded?.call();
-      if (mounted) Navigator.pop(context, true);
-    } else {
-      showSnackBarMessage(context, response.errorMessage ?? 'Failed to update task');
+      if (response.isSuccess) {
+        showSnackBarMessage(context, 'Task updated successfully');
+        widget.onTaskAdded?.call();
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        showSnackBarMessage(
+            context, response.errorMessage ?? 'Failed to update task.');
+      }
+    } catch (e) {
+      setState(() => _inProgress = false);
+      showSnackBarMessage(context, 'Failed to update task: $e');
     }
   }
 
   @override
   void dispose() {
-    _titleTEController.dispose();
-    _descriptionTEController.dispose();
+    _titleController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 }

@@ -1,23 +1,101 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:task_manager/design/widgets/screen_background.dart';
-import 'package:task_manager/screejn/Emal_Screen.dart';
-import 'package:task_manager/screejn/SignUp_screen.dart';
+import 'package:task_manager/utills/Urls.dart';
 import 'package:task_manager/screejn/sign_In.dart';
+
+import '../data/service/Network_caller.dart';
 
 class SetPassword extends StatefulWidget {
   const SetPassword({super.key});
-  static const String  name ='SetPassword';
+  static const String name = '/set-password';
 
   @override
   State<SetPassword> createState() => _SetPasswordState();
 }
 
 class _SetPasswordState extends State<SetPassword> {
-  final TextEditingController _emailController=TextEditingController();
-  final TextEditingController _passRController=TextEditingController();
-  final GlobalKey<FormState> _formKey=GlobalKey<FormState>();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  late String _email;
+  late String _otp;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>;
+    _email = args['email']!;
+    _otp = args['otp']!;
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _resetPassword() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final password = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await NetworkCaller.postRequest(
+        url: Urls.recoverResetPasswordUrl,
+        body: {
+          "email": _email,
+          "OTP": _otp,
+          "password": password,
+        },
+        isFromLogin: true, // ensures no token is sent
+      );
+
+      setState(() => _isLoading = false);
+
+      if (response.isSuccess && response.body != null) {
+        final status = response.body!['status'];
+        if (status == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Password reset successfully')),
+          );
+          Navigator.pushNamedAndRemoveUntil(context, SignIn.name, (route) => false);
+        } else {
+          // handle failure message from server
+          final message = response.body!['data'] ?? 'Password reset failed';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        }
+      } else {
+        // If the server returned invalid JSON or no body
+        final message = response.errorMessage ?? 'Password reset failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -30,132 +108,55 @@ class _SetPasswordState extends State<SetPassword> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 80,),
-                  Text(
-                    'Get Started With',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-
-
+                  const SizedBox(height: 80),
+                  Text('Set New Password', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 24),
                   TextFormField(
-
-                    controller: _passRController,
+                    controller: _passwordController,
                     obscureText: true,
-                    autovalidateMode:AutovalidateMode.onUserInteraction,
-                    decoration: InputDecoration(
-
-                      hintText: 'password',),
-
-                    validator: (String? value)
-
-                    {
-                      if (value?.isEmpty?? true)
-                      {
-                        return 'Enter  a valid Password';
-                      }
-                      return null;
-
-                    },
+                    decoration: const InputDecoration(hintText: 'New Password', prefixIcon: Icon(Icons.lock_outline)),
+                    validator: (value) => value == null || value.isEmpty ? 'Enter a valid password' : null,
                   ),
-                  const SizedBox(
-                    height: 16,
-                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
-
-                    controller: _passRController,
+                    controller: _confirmPasswordController,
                     obscureText: true,
-                    autovalidateMode:AutovalidateMode.onUserInteraction,
-                    decoration: InputDecoration(
-
-                      hintText: 'Confirm password',),
-
-                    validator: (String? value)
-
-                    {
-                      if (value?.isEmpty?? true)
-                      {
-                        return 'Enter  a valid Password';
-                      }
-                      return null;
-
-                    },
-
-
-
-
+                    decoration: const InputDecoration(hintText: 'Confirm Password', prefixIcon: Icon(Icons.lock_outline)),
+                    validator: (value) => value == null || value.isEmpty ? 'Confirm your password' : null,
                   ),
-                  const SizedBox(
-                    height: 16,
+                  const SizedBox(height: 32),
+                  Center(
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton.icon(
+                      onPressed: _resetPassword,
+                      icon: const Icon(Icons.arrow_circle_right_outlined),
+                      label: const Text('Set Password'),
+                    ),
                   ),
-                  ElevatedButton(
-                    onPressed: _onTapSignIn, child: Icon(Icons.arrow_circle_right_outlined),
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  TextButton(onPressed:_onTapForgot,child:  Text('SignIn?',style: TextStyle(
-                      color: Colors.grey
-                  ),)),
+                  const SizedBox(height: 16),
                   RichText(
-                    text: TextSpan(text: "Don't have any account?",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-
-                      ),
+                    text: TextSpan(
+                      text: "Already have an account? ",
+                      style: const TextStyle(color: Colors.black),
                       children: [
                         TextSpan(
-                            text: 'SignUp',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            recognizer: TapGestureRecognizer()..onTap=_onTapSignUp
+                          text: 'Sign In',
+                          style: const TextStyle(color: Colors.green),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pushReplacementNamed(context, SignIn.name);
+                            },
                         ),
                       ],
-
                     ),
-                  )
-
+                  ),
                 ],
-
-
-
               ),
             ),
           ),
         ),
       ),
-
-
     );
-
-  }
-  void _onTapSignUp(){
-    if (_formKey.currentState!.validate())
-    {
-      //Todo signIn
-    }
-
-  }
-  void _onTapForgot(){
-    Navigator.pushNamed(context, EmailPage.name);
-
-  }
-  void _onTapSignIn(){
-    Navigator.pushReplacementNamed(context, SignIn.name);
-
-  }
-
-  @override
-  void dispose()
-  {
-    _emailController.dispose();
-    _passRController.dispose();
-    super.dispose();
   }
 }

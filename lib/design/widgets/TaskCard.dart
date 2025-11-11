@@ -196,15 +196,17 @@ class _TaskCardState extends State<TaskCard> {
     }
   }
   String _formatDateTime(String rawDate) {
-    try {
-      final dateTime = DateTime.parse(rawDate); // No need for .toLocal() if already local
-      final date = '${dateTime.day.toString().padLeft(2, '0')} '
-          '${_monthName(dateTime.month)} ${dateTime.year}';
-      final time = TimeOfDay.fromDateTime(dateTime).format(context);
-      return '$date, $time';
-    } catch (_) {
-      return rawDate;
+    if (rawDate.trim().isEmpty || rawDate.trim().toLowerCase() == 'null') {
+      return 'Invalid date';
     }
+
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed == null) return 'Invalid date';
+
+    final date = '${parsed.day.toString().padLeft(2, '0')} '
+        '${_monthName(parsed.month)} ${parsed.year}';
+    final time = TimeOfDay.fromDateTime(parsed).format(context);
+    return '$date, $time';
   }
 
   String _monthName(int month) {
